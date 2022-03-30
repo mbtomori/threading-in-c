@@ -4,8 +4,10 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-// if we want, we can represent the stairs as an array:
-int NUM_STAIRS = 13;
+// The stairs are represented as an int. When STAIRS are positive, customers are going
+// upstairs. If negative, customers are going down the stairs.
+
+int DIRECTION = 0;
 // could put an id of the process in the stairs? or does this over-complicate things?
 
 void *descending_customer(void *arg);
@@ -14,6 +16,7 @@ void *use_stairs(void *customer);
 
 int main(void)
 {
+    pthread_mutex_t stairs;
     // array to keep PThread IDs of created Threads
     // int num_customers = 2;
     // pthread_t thread_id[num_customers]
