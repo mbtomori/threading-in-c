@@ -4,23 +4,79 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-// The stairs are represented as an int. When STAIRS are positive, customers are going
-// upstairs. If negative, customers are going down the stairs.
 
-int DIRECTION = 0;
-// could put an id of the process in the stairs? or does this over-complicate things?
+
+#define MAX_STORE_CUSTOMERS 50 // let's imagine it's a Daiso
+#define MAX_STAIR_USERS 4
+
+// When STAIR is 0, there is no direction, 1:ascending, 2: desc
+int STAIR_DIRECTION = 0;
+// array to contain customers
+pthread_t customers[MAX_STORE_CUSTOMERS];
 
 void *descending_customer(void *arg);
 void *ascending_customer(void *arg);
-void *use_stairs(void *customer);
+void *semaphore_wait(sem_t *semaphore);
+void *semaphore_signal(sem_t *semaphore);
+
+// Define global variables to track the users. 
+int current_stair_users = 0;
+int num_users_crossed = 0;
+int num_waiting_to_ascend = 0;
+int num_waiting_to_descend = 0;
+
+//increment the number of people crossing the stairs
+// fix the maximum number of people you can go down
+/*Clear some people waiting on floor one
+But need a maximum
+Need to check the xingCnt to see how many people do it. 
+Once that number is exceeded. 
+Add mutex and 
+Need to change the direction in the semaphore of the stairs
+Change the direction in the semaphore
+Is it my direction or the other?
+
+Imagine there are two flag people -- one at either direction
+All of these variables can be acquired
+
+Have to check direction, number of people waiting to go down
+or go up. 
+
+lots of if/else and lots of checking to decide whether it can go
+on the stairs. It's time to check
+
+Should keep track of waiting customers in a queue. 
+In this code we're not. 
+
+The semaphore is just a person who calls it to wait (it's the first person
+trying to go on the stairs. 
+if 10 people trying to go up, can acquire the semaphore)
+
+Can use an array to keep pthread objects, write a loop. 
+Have to define a maximum
+
+# define NAME 20 // define a constant. :)
+
+Don't want to hold everything in the semaphore.
+Once you update all the variables you release the lock and enter the stairs. 
+
+Need to implement crossing.
+
+Once you enter the first step is the release. 
+
+Just need to adjust all the numbers. 
+
+When you create the thread, you need to have the 4 params. 
+
+*/ 
+
 
 int main(void)
 {
-    pthread_mutex_t staircase; // initialize the lock.
+    pthread_mutex_t staircase = PTHREAD_MUTEX_INITIALIZER; // initialize the lock.
     // array to keep PThread IDs of created Threads
     // int num_customers = 2;
     // pthread_t thread_id[num_customers]
-    int direction = 0; // if the direction is negative, a person can descend, if positive you can ascend
     int STAIRS[NUM_STAIRS];
     pthread_t upstairs_customer;
     // pthread_t downstairs_customer;
@@ -54,7 +110,7 @@ void *descending_customer(void *customer_number)
             printf("DESC customer: %d | stair: %d\n", (int)customer_number, current_stair);
         }
     }
-    return NULL;
+    pthread_exit(NULL);
 }
 
 
@@ -73,7 +129,7 @@ void *ascending_customer(void *customer_number)
             printf("ASC customer: %d | stair: %d\n",(int)customer_number, current_stair);
         }
     }
-    return NULL;
+    pthread_exit(NULL);
 }
 
 // void *customer_scheduler(queue_t floor_1, queue_t floor_2) {
@@ -81,8 +137,22 @@ void *ascending_customer(void *customer_number)
 //     return NULL;
 // }
 
-void *use_stairs(void *customer)
+void semaphore_wait(sem_t *semaphore)
 {
     // maybe the threads would go here? I dunno.
-    return NULL;
+    if (semaphore_wait(semaphore) < 0)
+    {
+        perror("Wait failure.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void semaphore_signal(sem_t *semaphore)
+{
+    // maybe the threads would go here? I dunno.
+    if (semaphore_post(semaphore) < 0)
+    {
+        perror("Signal failure.\n");
+        exit(EXIT_FAILURE);
+    }
 }
