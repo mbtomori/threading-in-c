@@ -16,7 +16,7 @@ void *use_stairs(void *customer);
 
 int main(void)
 {
-    pthread_mutex_t stairs;
+    pthread_mutex_t staircase; // initialize the lock.
     // array to keep PThread IDs of created Threads
     // int num_customers = 2;
     // pthread_t thread_id[num_customers]
@@ -44,13 +44,14 @@ void *descending_customer(void *customer_number)
     int current_stair;
     for (current_stair = NUM_STAIRS; current_stair >= 0; current_stair--)
     {
+        printf("DESC customer: %d is at the top of the stairs.\n", (int)customer_number);
         if (current_stair == 0)
         {
-            printf("descending customer: %d has reached the first floor.\n\n", (int)customer_number);
+            printf("DESC customer: %d has reached the first floor.\n\n", (int)customer_number);
         }
         else
         {
-            printf("descending customer: %d is on stair: %d\n", (int)customer_number, current_stair);
+            printf("DESC customer: %d | stair: %d\n", (int)customer_number, current_stair);
         }
     }
     return NULL;
@@ -62,13 +63,14 @@ void *ascending_customer(void *customer_number)
     int current_stair;
     for (current_stair = 1; current_stair <= NUM_STAIRS; current_stair++)
     {
+        printf("ASC customer: %d is at the bottom of the stairs.\n", (int)customer_number);
         if (current_stair == NUM_STAIRS)
         {
-            printf("ascending customer: %d has reached the second floor.\n\n",(int)customer_number);
+            printf("ASC customer: %d has reached the second floor.\n\n",(int)customer_number);
         }
         else
         {
-            printf("ascending customer: %d is on stair: %d\n",(int)customer_number, current_stair);
+            printf("ASC customer: %d | stair: %d\n",(int)customer_number, current_stair);
         }
     }
     return NULL;

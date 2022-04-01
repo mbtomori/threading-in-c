@@ -20,7 +20,7 @@ Stairs crossing problem using pThreads and Semaphores
 
 
 // TODO
-// define semaphores you will use
+// define semaphores you will use 
 
 
 /* 
