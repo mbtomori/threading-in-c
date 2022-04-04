@@ -5,7 +5,6 @@
 #include <semaphore.h>
 
 
-
 #define MAX_STORE_CUSTOMERS 50 // let's imagine it's a Daiso
 #define MAX_STAIR_USERS 4
 #define NUM_STAIRS 13
@@ -28,6 +27,12 @@ int current_stair_users = 0;
 int num_users_crossed = 0;
 int num_waiting_to_ascend = 0;
 int num_waiting_to_descend = 0;
+
+struct thread_data 
+{
+    int thread_id;
+    int direction;
+};
 
 //increment the number of people crossing the stairs
 // fix the maximum number of people you can go down
@@ -82,7 +87,7 @@ int main(void)
     // array to keep PThread IDs of created Threads
     // int num_customers = 2;
     // pthread_t thread_id[num_customers]
-    pthread_t *upstairs_customer;
+    pthread_t upstairs_customer;
     // pthread_t downstairs_customer;
     pthread_create(&upstairs_customer, NULL, descend_stairs, NULL);
     // pthread_create(&downstairs_customer, NULL, ascend_stairs, NULL);
