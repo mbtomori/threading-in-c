@@ -8,16 +8,20 @@
 
 #define MAX_STORE_CUSTOMERS 50 // let's imagine it's a Daiso
 #define MAX_STAIR_USERS 4
+#define NUM_STAIRS 13
+#define FLOOR_1_SEM
+#define FLOOR_2_SEM
+
 
 // When STAIR is 0, there is no direction, 1:ascending, 2: desc
 int STAIR_DIRECTION = 0;
 // array to contain customers
 pthread_t customers[MAX_STORE_CUSTOMERS];
 
-void *descending_customer(void *arg);
-void *ascending_customer(void *arg);
-void *semaphore_wait(sem_t *semaphore);
-void *semaphore_signal(sem_t *semaphore);
+void *descend_stairs(void *customer);
+void *ascend_stairs(void *customer);
+void semaphore_wait(sem_t *semaphore);
+void semaphore_signal(sem_t *semaphore);
 
 // Define global variables to track the users. 
 int current_stair_users = 0;
@@ -73,18 +77,16 @@ When you create the thread, you need to have the 4 params.
 
 int main(void)
 {
+
     pthread_mutex_t staircase = PTHREAD_MUTEX_INITIALIZER; // initialize the lock.
     // array to keep PThread IDs of created Threads
     // int num_customers = 2;
     // pthread_t thread_id[num_customers]
-    int STAIRS[NUM_STAIRS];
-    pthread_t upstairs_customer;
+    pthread_t *upstairs_customer;
     // pthread_t downstairs_customer;
-    pthread_create(&upstairs_customer, NULL, descending_customer, 2);
-    ascending_customer(2);
-    descending_customer(1);
-    // pthread_create(&downstairs_customer, NULL, ascending_customer, NULL);
-    pthread_join(&upstairs_customer, NULL);
+    pthread_create(&upstairs_customer, NULL, descend_stairs, NULL);
+    // pthread_create(&downstairs_customer, NULL, ascend_stairs, NULL);
+    pthread_join(upstairs_customer, NULL);
     // pthread_join(&downstairs_customer, NULL);
     // for (i = 0; i < num_customers; i++) {
         /* HERE IS WHERE THE LOGIC SHOULD GO
@@ -95,38 +97,38 @@ int main(void)
     // }
 }
 
-void *descending_customer(void *customer_number)
+void *descend_stairs(void *customer_number)
 {
     int current_stair;
     for (current_stair = NUM_STAIRS; current_stair >= 0; current_stair--)
     {
-        printf("DESC customer: %d is at the top of the stairs.\n", (int)customer_number);
+        printf("DESC customer: %p is at the top of the stairs.\n", (int *)customer_number);
         if (current_stair == 0)
         {
-            printf("DESC customer: %d has reached the first floor.\n\n", (int)customer_number);
+            printf("DESC customer: %p has reached the first floor.\n\n", (int *)customer_number);
         }
         else
         {
-            printf("DESC customer: %d | stair: %d\n", (int)customer_number, current_stair);
+            printf("DESC customer: %p | stair: %d\n", (int *)customer_number, current_stair);
         }
     }
     pthread_exit(NULL);
 }
 
 
-void *ascending_customer(void *customer_number)
+void *ascend_customer(void *customer_number)
 {
     int current_stair;
     for (current_stair = 1; current_stair <= NUM_STAIRS; current_stair++)
     {
-        printf("ASC customer: %d is at the bottom of the stairs.\n", (int)customer_number);
+        printf("ASC customer: %p is at the bottom of the stairs.\n", (int *)customer_number);
         if (current_stair == NUM_STAIRS)
         {
-            printf("ASC customer: %d has reached the second floor.\n\n",(int)customer_number);
+            printf("ASC customer: %p has reached the second floor.\n\n",(int *)customer_number);
         }
         else
         {
-            printf("ASC customer: %d | stair: %d\n",(int)customer_number, current_stair);
+            printf("ASC customer: %p | stair: %d\n",(int *)customer_number, current_stair);
         }
     }
     pthread_exit(NULL);
@@ -140,7 +142,7 @@ void *ascending_customer(void *customer_number)
 void semaphore_wait(sem_t *semaphore)
 {
     // maybe the threads would go here? I dunno.
-    if (semaphore_wait(semaphore) < 0)
+    if (sem_wait(semaphore) < 0)
     {
         perror("Wait failure.\n");
         exit(EXIT_FAILURE);
@@ -150,7 +152,7 @@ void semaphore_wait(sem_t *semaphore)
 void semaphore_signal(sem_t *semaphore)
 {
     // maybe the threads would go here? I dunno.
-    if (semaphore_post(semaphore) < 0)
+    if (sem_post(semaphore) < 0)
     {
         perror("Signal failure.\n");
         exit(EXIT_FAILURE);
