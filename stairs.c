@@ -45,6 +45,7 @@ int num_waiting_to_descend = 0;
 enum {none, up, down} stair_direction;
 sem_t first_floor_gatekeeper;
 sem_t second_floor_gatekeeper;
+sem_t stair_manager;
 
 
 //Functions to "use the stairs"
@@ -54,6 +55,9 @@ void *descend_stairs(void *arg);
 //Semaphore wait and signal functions
 void semaphore_wait(sem_t *sem);
 void semaphore_signal(sem_t *sem);
+
+// Helper function to reset the direction
+void reset_direction(char *direction);
 
 
 int main(void)
@@ -151,14 +155,14 @@ void *descend_stairs(void *customer_thread)
         current_stair_users++;
         num_waiting_to_descend--;
     }
-    semaphore_signal(&second_floor_gatekeeper);
+    // semaphore_signal(&second_floor_gatekeeper);
     
     // customer descends the stairs.
     printf("**Customer %d is descending the stairs.\n", customer_id);
     sleep(1);
 
     // customer reached the first floor and checks in with gatekeeper
-    semaphore_wait(&first_floor_gatekeeper);
+    // semaphore_wait(&first_floor_gatekeeper);
     printf("Customer %d reached the first floor.\n", customer_id);
     num_users_crossed++;
     current_stair_users--;
@@ -166,12 +170,9 @@ void *descend_stairs(void *customer_thread)
     // do we need to reset the direction of the stairs?
     if (current_stair_users + num_users_crossed >= MAX_STAIR_USERS)
     {
-        printf("%d Customers have descended the stairs. Resetting the direction.\n", num_users_crossed);
-        stair_direction = none;
-        num_users_crossed = 0;
-        current_stair_users = 0;
+        reset_direction("descend");
     }
-    semaphore_signal(&first_floor_gatekeeper);
+    semaphore_signal(&second_floor_gatekeeper);
     pthread_exit(NULL);
 }
 
@@ -187,7 +188,7 @@ void *ascend_stairs(void *customer_thread)
 
     printf("****\nCustomer %d would like to ascend to the second floor.\n", customer_id);
     // acquire the lock to update the count
-    semaphore_wait(&first_floor_gatekeeper);
+    semaphore_wait(&second_floor_gatekeeper);
     num_waiting_to_ascend++;
 
     // Can the customer ascend?
@@ -202,14 +203,14 @@ void *ascend_stairs(void *customer_thread)
         current_stair_users++;
         num_waiting_to_ascend--;
     }
-    semaphore_signal(&first_floor_gatekeeper);
+    semaphore_signal(&second_floor_gatekeeper);
     
     // customer ascends the stairs.
     printf("**Customer %d is ascending the stairs.\n", customer_id);
     sleep(1);
 
     // customer reached the first floor and checks in with gatekeeper
-    semaphore_wait(&second_floor_gatekeeper);
+    semaphore_wait(&first_floor_gatekeeper);
     printf("Customer %d reached the second floor.\n", customer_id);
     num_users_crossed++;
     current_stair_users--;
@@ -217,13 +218,18 @@ void *ascend_stairs(void *customer_thread)
     // do we need to reset the direction of the stairs?
     if (current_stair_users + num_users_crossed >= MAX_STAIR_USERS)
     {
-        printf("%d Customers have ascended the stairs. Resetting the direction.\n", num_users_crossed);
-        stair_direction = none;
-        num_users_crossed = 0;
-        current_stair_users = 0;
+        reset_direction("ascend");
     }
-    semaphore_signal(&second_floor_gatekeeper);
+    semaphore_signal(&first_floor_gatekeeper);
     pthread_exit(NULL);
+}
+
+void reset_direction(char *direction)
+{
+    printf("%d Customer(s) have %s the stairs. Resetting the direction.\n", num_users_crossed, direction);
+    stair_direction = none;
+    num_users_crossed = 0;
+    current_stair_users = 0;
 }
 
 // helper functions
