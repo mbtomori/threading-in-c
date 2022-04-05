@@ -2,7 +2,6 @@
 /*
 Stairs crossing problem using pThreads and Semaphores
 */
-
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
@@ -36,7 +35,7 @@ typedef struct customer_t
 
 int current_stair_users = 0;
 int num_users_crossed = 0;
-int number_waiting_to_ascend = 0;
+int num_waiting_to_ascend = 0;
 int num_waiting_to_descend = 0;
 
 
