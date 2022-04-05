@@ -9,10 +9,10 @@ Stairs crossing problem using pThreads and Semaphores
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifndef MAX_STORE_CUSTOMERS 
+#ifndef MAX_STORE_CUSTOMERS
 // TODO
 // #define MAX_STORE_CUSTOMERS : which is the maximum number of customers/threads in the system to test
-#define MAX_STORE_CUSTOMERS  15
+#define MAX_STORE_CUSTOMERS 15
 // #define MAX_STAIR_USERS: how many customer can be on the stairs at the same time
 #define MAX_STAIR_USERS 13
 // you can also define other constants for your "prevent deadlock" or "prevent starvation" algorithm
@@ -33,14 +33,14 @@ sem_t descend;
 sem_t stair_lock;
 
 /* 
- *  the following variables are created to:  
+ *  the following variables are created to:
  *  1. prevent deadlock
  *  2. prevent starvation
  *  3. allow more than one customer to use the stairs in the same direction in an “efficient” way
        that you determine
  */
 
-int current_stair_users, num_users_crossed, number_waiting_to_ascend, num_waiting_to_descend; 
+int current_stair_users, num_users_crossed, number_waiting_to_ascend, num_waiting_to_descend;
 
 
 /* 
@@ -101,22 +101,23 @@ int main(void)
         {
             thread_func = ascend_stairs;
         } 
-        else{
+        else
+        {
             thread_func = descend_stairs;
         }
 
         // Why was this in here twice?
         // sleep(1);
         // fflush(stdout);
-        sleep(1);
+        // sleep(1);
         fflush(stdout);
 
-    if ((errCheck = pthread_create(&thread[i], NULL, thread_func, &customer_data[i])))
-    {
-            fprintf(stderr, "error: pthread_create, %d\n", errCheck);
-            return EXIT_FAILURE;
+        if ((errCheck = pthread_create(&thread[i], NULL, thread_func, &customer_data[i])))
+        {
+                fprintf(stderr, "error: pthread_create, %d\n", errCheck);
+                return EXIT_FAILURE;
+            }
         }
-    }
     
     for (int i = 0; i < MAX_STORE_CUSTOMERS ; ++i)
     {
@@ -175,7 +176,7 @@ void *descend_stairs(void *arg)
 
         printf("Signaling stair_lock\n");
         fflush(stdout);
-        semaphore_wait(&stair_lock);
+        semaphore_wait(&stair_lock); /// why is it calling this here when it already called on 149?
         semaphore_wait(&descend);
 
         num_waiting_to_descend--;
