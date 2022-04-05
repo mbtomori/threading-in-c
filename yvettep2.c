@@ -23,7 +23,7 @@ Stairs crossing problem using pThreads and Semaphores
 // create a struct as Thread's data. Contains the thread's ID.
 typedef struct _customer_t
 {
-    int tID; 
+    int id;
 } customer_t;
  
 // TODO
@@ -95,7 +95,7 @@ int main(void)
 
         void *thread_func;
 
-        customer_data[i].tID = i;
+        customer_data[i].id = i;
 
         if (rand() % MAX_STORE_CUSTOMERS  <= MAX_STORE_CUSTOMERS / 2)
         {
@@ -144,18 +144,18 @@ void *descend_stairs(void *arg)
      */
     customer_t *data = (customer_t *)arg;
 
-    int tIDdown = data->tID;
+    int customer_id = data->id;
     semaphore_wait(&stair_lock);
 
-    printf("****\nThread %d: customer would like to cross from A to B, going down\n", tIDdown);
+    printf("****\nThread %d: customer would like to descend from 2nd to first floor, going down\n", customer_id);
     fflush(stdout);
 
     if ((stair_direction == down || stair_direction == none) && 
-        (current_stair_users < 5) &&
-        ((num_users_crossed + current_stair_users) < 10))
+        (current_stair_users < MAX_STAIR_USERS) &&
+        ((num_users_crossed + current_stair_users) < MAX_STORE_CUSTOMERS))
     {
 
-        printf("Customer is Crossing from A to B, going down\n");
+        printf("Customer is descending to first floor.\n");
         fflush(stdout);
 
         stair_direction = down;
@@ -169,7 +169,7 @@ void *descend_stairs(void *arg)
     // is this duplicative? Could we just call the down method again?
     else
     {
-        printf("Customer is waiting to go down\n");
+        printf("Customer is waiting to go downstairs\n");
         fflush(stdout);
         num_waiting_to_descend++;
 
@@ -190,7 +190,7 @@ void *descend_stairs(void *arg)
     fflush(stdout);
     semaphore_wait(&stair_lock);
     
-    printf("stair_lock Passed\n");
+    printf("stair_lock passed\n");
     fflush(stdout);
 
     // is this duplicative? Could we just call the down method again?
@@ -198,17 +198,17 @@ void *descend_stairs(void *arg)
     current_stair_users--;
 
     if (num_waiting_to_descend!= 0 &&
-        (current_stair_users + num_users_crossed < 10 ||
-            (num_users_crossed + current_stair_users>= 10 && number_waiting_to_ascend == 0)))
+        (current_stair_users + num_users_crossed < MAX_STORE_CUSTOMERS ||
+            (num_users_crossed + current_stair_users >= MAX_STORE_CUSTOMERS && number_waiting_to_ascend == 0)))
     {
 
         semaphore_signal(&descend);
     }
 
     else if(current_stair_users == 0 &&
-        number_waiting_to_ascend !=0 &&
+        number_waiting_to_ascend != 0 &&
         (num_waiting_to_descend == 0 ||
-            num_users_crossed + num_waiting_to_descend >= 10))
+            num_users_crossed + num_waiting_to_descend >= MAX_STORE_CUSTOMERS))
     {
 
         // Do we need to lock something before calling this?
@@ -246,18 +246,18 @@ void *ascend_stairs(void *arg)
 {
     customer_t *data = (customer_t *)arg;
 
-    int tIDup = data->tID;
+    int customer_id = data->id;
     semaphore_wait(&stair_lock);
 
-    printf("****\nThread %d: customer would like to cross from B to A, going up\n", tIDup);
+    printf("****\nThread %d: customer would like to ascend to second floor, going up\n", customer_id);
     fflush(stdout);
 
     if ((stair_direction == up || stair_direction == none) && 
-        current_stair_users < 5 &&
-        (num_users_crossed + current_stair_users < 10))
+        current_stair_users < MAX_STAIR_USERS &&
+        (num_users_crossed + current_stair_users < MAX_STORE_CUSTOMERS))
     {
 
-        printf("Customer is Crossing from B to A, going up\n");
+        printf("Customer is ascending to 2nd floor.\n");
         fflush(stdout);
 
         stair_direction = up;
@@ -302,8 +302,8 @@ void *ascend_stairs(void *arg)
 
     
     if (number_waiting_to_ascend!= 0 &&
-        (current_stair_users + num_users_crossed < 10 ||
-            (num_users_crossed + current_stair_users>= 10 && num_waiting_to_descend == 0)))
+        (current_stair_users + num_users_crossed < MAX_STORE_CUSTOMERS ||
+            (num_users_crossed + current_stair_users>= MAX_STORE_CUSTOMERS && num_waiting_to_descend == 0)))
     {
 
         semaphore_signal(&ascend);
@@ -312,7 +312,7 @@ void *ascend_stairs(void *arg)
     else if(current_stair_users == 0 &&
         num_waiting_to_descend !=0 &&
         (number_waiting_to_ascend == 0 ||
-            num_users_crossed + num_waiting_to_descend >= 10))
+            num_users_crossed + num_waiting_to_descend >= MAX_STORE_CUSTOMERS))
     {
         
         stair_direction = down;
