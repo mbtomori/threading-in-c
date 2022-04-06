@@ -226,7 +226,7 @@ void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *lo
     if (direction->counter == 1)
     {
         semaphore_wait(locking_semaphore);
-        printf("\n****SET DIRECTION****\n");
+        printf("\n****SET DIRECTION****\ns");
     }
     semaphore_signal(direction_semaphore);
 }
@@ -243,45 +243,3 @@ void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *
     }
     semaphore_signal(direction_semaphore);
 }
-
-/*
- *  Expected test result:
- * Please print logs to show the customers' status for testing. Here is an example:
-Project 2: Customer crossing problem using pThreads and Semaphores
-*****************
-Parent Process PID: 86672 
-****
-Thread 0: About to cross
-customer is Crossing from B to A
-Crossing Finished
-Signaling stair_lock
-Using Stairs 
-Finished Stairs . Waiting for stair_lock 
-stair_lock Passed
-Crossing Direction Reset 
-Signaling stair_lock
-****
-Thread 1: About to cross
-customer is Crossing from B to A
-Crossing Finished
-Signaling stair_lock
-Using Stairs 
-Finished Stairs . Waiting for stair_lock 
-stair_lock Passed
-Crossing Direction Reset 
-Signaling stair_lock
-****
-Thread 2: customer Crossing from A to B
-customer is Crossing from A to B
-Signaling stair_lock
-There are 0 customers waiting 
-Using Stairs 
-The customer will finish crossing in 1 seconds 
-Finished Stairs. Waiting for stair_lock 
-stair_lock Passed
-Crossing Direction Reset 
-****
-
-
-}
- */
