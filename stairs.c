@@ -58,9 +58,6 @@ void *descend_stairs(void *customer_threads);
 void semaphore_wait(sem_t *sem);
 void semaphore_signal(sem_t *sem);
 
-// Helper function to reset the direction
-void reset_direction(char *direction);
-
 //lightswitch functions
 void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
 void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
