@@ -13,4 +13,3 @@ stairs: stairs.c
 	
 clean:
 	rm -f $(OUT)
-	rm -f $(SOUT)	
