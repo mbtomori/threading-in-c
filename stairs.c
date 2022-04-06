@@ -7,11 +7,12 @@ Stairs crossing problem using pThreads and Semaphores
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #ifndef MAX_STORE_CUSTOMERS
 // TODO
 // #define MAX_STORE_CUSTOMERS : which is the maximum number of customers/threads in the system to test
-#define MAX_STORE_CUSTOMERS 15
+#define MAX_STORE_CUSTOMERS 10
 // #define MAX_STAIR_USERS: how many customer can be on the stairs at the same time
 #define MAX_STAIR_USERS 4
 // you can also define other constants for your "prevent deadlock" or "prevent starvation" algorithm
@@ -19,34 +20,35 @@ Stairs crossing problem using pThreads and Semaphores
 
 
 //TODO 
-// create a struct as Thread's data. Contains the thread's ID.
+// create a struct as the cusomer's data. Contains the customer's ID.
 typedef struct customer_t
 {
     int id;
 } customer_t;
 
-/*
- *  the following variables are created to:
- *  1. prevent deadlock
- *  2. prevent starvation
- *  3. allow more than one customer to use the stairs in the same direction in an “efficient” way
-       that you determine
- */
-
-int current_stair_users = 0;
-int num_users_crossed = 0;
-int num_waiting_to_ascend = 0;
-int num_waiting_to_descend = 0;
+typedef struct lightswitch_t
+{
+    int counter;
+} lightswitch_t;
 
 
-/* 
- * We used an enum instead of int for readability.
- */
-enum {none, up, down} stair_direction;
+// counting semaphores
 sem_t first_floor_gatekeeper;
 sem_t second_floor_gatekeeper;
-sem_t stair_manager;
 
+// direction semaphores
+sem_t up_direction;
+sem_t down_direction;
+
+//initialize the lightswitches
+lightswitch_t up_switch;
+lightswitch_t down_switch;
+
+// determine if you're the first person on stairs
+sem_t empty_stairs;
+
+// binary turnstile semaphore to avoid starvation
+sem_t stair_manager;
 
 //Functions to "use the stairs"
 void *ascend_stairs(void *arg);
@@ -59,6 +61,10 @@ void semaphore_signal(sem_t *sem);
 // Helper function to reset the direction
 void reset_direction(char *direction);
 
+//lightswitch functions
+void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
+void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
+
 
 int main(void)
 {
@@ -66,21 +72,22 @@ int main(void)
     printf("*****************\n\n");
     fflush(stdout);
 
-    // TODO
-    /*
-     *  initialize your pthread, semaphore and other variables you will need
-     *  please do error check if the program fail to pthread_create()
-     */
-
     customer_t customer_data[MAX_STORE_CUSTOMERS];
-    pthread_t store_customers[MAX_STORE_CUSTOMERS ];
-    stair_direction = none;
+    pthread_t store_customers[MAX_STORE_CUSTOMERS];
+
+    // set values of switches
+    up_switch.counter = 0;
+    down_switch.counter = 0;
 
     int errCheck;
 
     // initialize the semaphores and check they were initialized properly
-    if (sem_init(&first_floor_gatekeeper, 0, (unsigned int)1) < 0
-        || sem_init(&second_floor_gatekeeper, 0, (unsigned int)1) < 0)
+    if (sem_init(&first_floor_gatekeeper, 0, (unsigned int)MAX_STAIR_USERS) < 0
+        || sem_init(&second_floor_gatekeeper, 0, (unsigned int)MAX_STAIR_USERS) < 0
+        || sem_init(&stair_manager, 0, (unsigned int)1) < 0
+        || sem_init(&empty_stairs, 0, (unsigned int)1) < 0
+        || sem_init(&up_direction, 0, (unsigned int)1) < 0
+        || sem_init(&down_direction, 0, (unsigned int)1) < 0)
     {
         perror("sem_init");
         exit(EXIT_FAILURE);
@@ -139,40 +146,21 @@ void *descend_stairs(void *customer_thread)
     int customer_id = data->id;
 
     printf("****\nCustomer %d would like to descend to the first floor.\n", customer_id);
-    // acquire the lock to update the count
-    semaphore_wait(&second_floor_gatekeeper);
-    num_waiting_to_descend++;
 
-    // Can the customer descend?
-    if ((stair_direction == none || stair_direction == down)
-       && (current_stair_users + num_users_crossed < MAX_STAIR_USERS))
-    {
-        printf("**Customer %d is permitted to descend the stairs.\n", customer_id);
-        if (stair_direction == none)
-        {
-            stair_direction = down;
-        }
-        current_stair_users++;
-        num_waiting_to_descend--;
-    }
-    // semaphore_signal(&second_floor_gatekeeper);
-    
-    // customer descends the stairs.
+    // Check stair_manager lock to see if there are others on the stairs.
+    semaphore_wait(&stair_manager);
+    printf("****\nCustomer %d checking stair_manager lock.\n", customer_id);
+    switch_lock(&down_switch, &down_direction, &empty_stairs);
+    printf("****\nCustomer %d first one.\n", customer_id);
+    semaphore_signal(&stair_manager);
+    printf("****\nCustomer %d release manager.\n", customer_id);
+    semaphore_wait(&second_floor_gatekeeper);
+
     printf("**Customer %d is descending the stairs.\n", customer_id);
     sleep(1);
-
-    // customer reached the first floor and checks in with gatekeeper
-    // semaphore_wait(&first_floor_gatekeeper);
     printf("Customer %d reached the first floor.\n", customer_id);
-    num_users_crossed++;
-    current_stair_users--;
-
-    // do we need to reset the direction of the stairs?
-    if (current_stair_users + num_users_crossed >= MAX_STAIR_USERS)
-    {
-        reset_direction("descend");
-    }
     semaphore_signal(&second_floor_gatekeeper);
+    switch_unlock(&down_switch, &down_direction, &empty_stairs);
     pthread_exit(NULL);
 }
 
@@ -187,49 +175,19 @@ void *ascend_stairs(void *customer_thread)
     int customer_id = data->id;
 
     printf("****\nCustomer %d would like to ascend to the second floor.\n", customer_id);
-    // acquire the lock to update the count
-    semaphore_wait(&second_floor_gatekeeper);
-    num_waiting_to_ascend++;
 
-    // Can the customer ascend?
-    if ((stair_direction == none || stair_direction == up)
-       && (current_stair_users + num_users_crossed < MAX_STAIR_USERS))
-    {
-        printf("**Customer %d is permitted to ascend the stairs.\n", customer_id);
-        if (stair_direction == none)
-        {
-            stair_direction = up;
-        }
-        current_stair_users++;
-        num_waiting_to_ascend--;
-    }
-    semaphore_signal(&second_floor_gatekeeper);
-    
-    // customer ascends the stairs.
+    // Check stair_manager lock to see if there are others on the stairs.
+    semaphore_wait(&stair_manager);
+    switch_lock(&up_switch, &up_direction, &empty_stairs);
+    semaphore_signal(&stair_manager);
+    semaphore_wait(&first_floor_gatekeeper);
+
     printf("**Customer %d is ascending the stairs.\n", customer_id);
     sleep(1);
-
-    // customer reached the first floor and checks in with gatekeeper
-    semaphore_wait(&first_floor_gatekeeper);
     printf("Customer %d reached the second floor.\n", customer_id);
-    num_users_crossed++;
-    current_stair_users--;
-
-    // do we need to reset the direction of the stairs?
-    if (current_stair_users + num_users_crossed >= MAX_STAIR_USERS)
-    {
-        reset_direction("ascend");
-    }
     semaphore_signal(&first_floor_gatekeeper);
+    switch_unlock(&up_switch, &up_direction, &empty_stairs);
     pthread_exit(NULL);
-}
-
-void reset_direction(char *direction)
-{
-    printf("%d Customer(s) have %s the stairs. Resetting the direction.\n", num_users_crossed, direction);
-    stair_direction = none;
-    num_users_crossed = 0;
-    current_stair_users = 0;
 }
 
 // helper functions
@@ -255,6 +213,31 @@ void semaphore_signal(sem_t *sem)
         perror("sem_post");
         exit(EXIT_FAILURE);
     }
+}
+
+
+// lightswitch implementation to set the direction of the staircase.
+void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore)
+{
+    semaphore_wait(direction_semaphore);
+    direction->counter++;
+    if (direction->counter == 1)
+    {
+        semaphore_wait(locking_semaphore);
+    }
+    semaphore_signal(direction_semaphore);
+}
+
+// lightswitch implementation to unset the staircase direction.
+void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore)
+{
+    semaphore_wait(direction_semaphore);
+    direction->counter--;
+    if (direction->counter == 0)
+    {
+        semaphore_signal(locking_semaphore);
+    }
+    semaphore_signal(direction_semaphore);
 }
 
 /*
