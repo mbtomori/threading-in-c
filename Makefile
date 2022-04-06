@@ -1,17 +1,14 @@
 #Makefile for stairs.c
 
 CC = gcc
-OUT = output.o
+OUT = stairs
 SRC = stairs.c
-TXT1 = output1.txt
-TXT2 = output2.txt
-all: 	as7
+all: 	stairs
 
-as7: stairs.c 
+stairs: stairs.c 
 	$(CC) -Wall -pthread -std=c99 -o $(OUT) $(SRC)
 	chmod 700 $(OUT)
-	 ./$(OUT) >$(TXT1)
-	 ./$(OUT) >$(TXT2)
+	 ./$(OUT)
 
 	
 clean:

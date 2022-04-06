@@ -132,6 +132,10 @@ int main(void)
     // destroy the semaphores to prevent memory leaks
     sem_destroy(&second_floor_gatekeeper);
     sem_destroy(&first_floor_gatekeeper);
+    sem_destroy(&stair_manager);
+    sem_destroy(&up_direction);
+    sem_destroy(&down_direction);
+    sem_destroy(&empty_stairs);
 
     return EXIT_SUCCESS;
 }
