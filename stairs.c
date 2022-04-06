@@ -149,20 +149,18 @@ void *descend_stairs(void *customer_thread)
 
     int customer_id = data->id;
 
-    printf("****\nCustomer %d would like to descend to the first floor.\n", customer_id);
+    printf("\nDESC: Customer %d would like to descend to the first floor.\n", customer_id);
 
     // Check stair_manager lock to see if there are others on the stairs.
     semaphore_wait(&stair_manager);
-    printf("****\nCustomer %d checking stair_manager lock.\n", customer_id);
+    printf("DESC: Customer %d checking stair_manager lock.\n", customer_id);
     switch_lock(&down_switch, &down_direction, &empty_stairs);
-    printf("****\nCustomer %d first one.\n", customer_id);
     semaphore_signal(&stair_manager);
-    printf("****\nCustomer %d release manager.\n", customer_id);
     semaphore_wait(&second_floor_gatekeeper);
 
-    printf("**Customer %d is descending the stairs.\n", customer_id);
+    printf("**DESC: Customer %d is descending.\n", customer_id);
     sleep(1);
-    printf("Customer %d reached the first floor.\n", customer_id);
+    printf("***DESC: Customer %d reached the first floor.\n", customer_id);
     semaphore_signal(&second_floor_gatekeeper);
     switch_unlock(&down_switch, &down_direction, &empty_stairs);
     pthread_exit(NULL);
@@ -178,7 +176,7 @@ void *ascend_stairs(void *customer_thread)
 
     int customer_id = data->id;
 
-    printf("****\nCustomer %d would like to ascend to the second floor.\n", customer_id);
+    printf("\nASC: Customer %d would like to ascend to the second floor.\n", customer_id);
 
     // Check stair_manager lock to see if there are others on the stairs.
     semaphore_wait(&stair_manager);
@@ -186,9 +184,9 @@ void *ascend_stairs(void *customer_thread)
     semaphore_signal(&stair_manager);
     semaphore_wait(&first_floor_gatekeeper);
 
-    printf("**Customer %d is ascending the stairs.\n", customer_id);
+    printf("**ASC: Customer %d is ascending.\n", customer_id);
     sleep(1);
-    printf("Customer %d reached the second floor.\n", customer_id);
+    printf("***ASC: Customer %d reached the second floor.\n", customer_id);
     semaphore_signal(&first_floor_gatekeeper);
     switch_unlock(&up_switch, &up_direction, &empty_stairs);
     pthread_exit(NULL);
@@ -228,6 +226,7 @@ void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *lo
     if (direction->counter == 1)
     {
         semaphore_wait(locking_semaphore);
+        printf("\n****SET DIRECTION****\n");
     }
     semaphore_signal(direction_semaphore);
 }
@@ -240,6 +239,7 @@ void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *
     if (direction->counter == 0)
     {
         semaphore_signal(locking_semaphore);
+        printf("****RESET DIRECTION****\n");
     }
     semaphore_signal(direction_semaphore);
 }
