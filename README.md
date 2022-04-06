@@ -22,6 +22,12 @@ We also implemented a turnstile `stair_manager` semaphore to allow one customer 
 ### Function Overview
 - List the functions you wrote, and the purpose of each function.
 
+`void *ascend_stairs(void *customer_thread);`
+
+`void *descend_stairs(void *customer_thread);`
+
+
+
 ### Project Testing
 Explain how you tested your project and list the test cases you used.
 
@@ -40,6 +46,8 @@ Explain how you are guaranteeing that your code is free of deadlock and starvati
 ### Compile and Run Instructions
 
 Compile and run with `make stairs`. The output will print directly to the terminal.
+
+run `make clean` before re-running.
 
 ### Group contributions
 - List the contributions of each student in your group
