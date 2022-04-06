@@ -51,15 +51,12 @@ sem_t stair_manager;
 
 // FUNCTION DEFINITIONS
 //Functions to "use the stairs"
-void *ascend_stairs(void *arg);
-void *descend_stairs(void *arg);
+void *ascend_stairs(void *customer_threads);
+void *descend_stairs(void *customer_threads);
 
 //Semaphore wait and signal functions
 void semaphore_wait(sem_t *sem);
 void semaphore_signal(sem_t *sem);
-
-// Helper function to reset the direction
-void reset_direction(char *direction);
 
 //lightswitch functions
 void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
