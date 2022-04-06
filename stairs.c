@@ -51,8 +51,8 @@ sem_t stair_manager;
 
 // FUNCTION DEFINITIONS
 //Functions to "use the stairs"
-void *ascend_stairs(void *arg);
-void *descend_stairs(void *arg);
+void *ascend_stairs(void *customer_threads);
+void *descend_stairs(void *customer_threads);
 
 //Semaphore wait and signal functions
 void semaphore_wait(sem_t *sem);
