@@ -66,6 +66,12 @@ void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *lo
 void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);
 
 
+void print_clock_array(void);
+clock_t thread_create_time[MAX_STORE_CUSTOMERS];
+clock_t thread_start_time[MAX_STORE_CUSTOMERS];
+clock_t thread_complete_time[MAX_STORE_CUSTOMERS];
+
+
 int main(void)
 {
     printf("Project 2: Customer crossing problem using pThreads and Semaphores\n");
@@ -118,8 +124,14 @@ int main(void)
         {
                 fprintf(stderr, "error: pthread_create, %d\n", errCheck);
                 return EXIT_FAILURE;
-            }
         }
+
+        // set creation start_time
+        thread_create_time[i] = clock();
+
+    }
+
+
     
     for (int i = 0; i < MAX_STORE_CUSTOMERS ; ++i)
     {
@@ -128,6 +140,9 @@ int main(void)
             fprintf(stderr, "error: pthread_join, %d\n", errCheck);
         }
     }
+
+    print_clock_array();
+
 
     // destroy the semaphores to prevent memory leaks
     sem_destroy(&second_floor_gatekeeper);
@@ -149,6 +164,9 @@ void *descend_stairs(void *customer_thread)
 
     int customer_id = data->id;
 
+    // set process start time
+    thread_start_time[customer_id] = clock();
+
     printf("\nDESC: Customer %d would like to descend to the first floor.\n", customer_id);
 
     // Check stair_manager lock to see if there are others on the stairs.
@@ -163,6 +181,8 @@ void *descend_stairs(void *customer_thread)
     printf("***DESC: Customer %d reached the first floor.\n", customer_id);
     semaphore_signal(&second_floor_gatekeeper);
     switch_unlock(&down_switch, &down_direction, &empty_stairs);
+    // set process completion time
+    thread_complete_time[customer_id] = clock();
     pthread_exit(NULL);
 }
 
@@ -175,6 +195,9 @@ void *ascend_stairs(void *customer_thread)
     customer_t *data = (customer_t *)customer_thread;
 
     int customer_id = data->id;
+
+    // set process start time
+    thread_start_time[customer_id] = clock();
 
     printf("\nASC: Customer %d would like to ascend to the second floor.\n", customer_id);
 
@@ -189,6 +212,10 @@ void *ascend_stairs(void *customer_thread)
     printf("***ASC: Customer %d reached the second floor.\n", customer_id);
     semaphore_signal(&first_floor_gatekeeper);
     switch_unlock(&up_switch, &up_direction, &empty_stairs);
+
+    // set process completion time
+    thread_complete_time[customer_id] = clock();
+
     pthread_exit(NULL);
 }
 
@@ -226,7 +253,7 @@ void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *lo
     if (direction->counter == 1)
     {
         semaphore_wait(locking_semaphore);
-        printf("\n****SET DIRECTION****\ns");
+        printf("\n****SET DIRECTION****\n");
     }
     semaphore_signal(direction_semaphore);
 }
@@ -242,4 +269,15 @@ void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *
         printf("****RESET DIRECTION****\n");
     }
     semaphore_signal(direction_semaphore);
+}
+
+void print_clock_array(void)
+{
+    printf("************Process Stats**********\n");
+    for (int i = 0; i < MAX_STORE_CUSTOMERS; i++)
+    {
+        printf("Process %d: create: %ld |start: %ld |complete %ld\n", i, thread_create_time[i], thread_start_time[i], thread_complete_time[i]);
+        printf("Turnaround Time: %ld", thread_complete_time[i]-thread_create_time[i]);
+        printf(" | Response Time: %ld\n\n", thread_start_time[i]-thread_create_time[i]);
+    }
 }
