@@ -10,8 +10,8 @@ Stairs crossing problem using pThreads and Semaphores
 #include <time.h>
 
 // DEFINE CONSTANTS
-#define MAX_STORE_CUSTOMERS 10 // max customers in the store
-#define MAX_STAIR_USERS 4  // max customers who can use the stairs simultaneously
+#define MAX_STORE_CUSTOMERS 50 // max customers in the store
+#define MAX_STAIR_USERS 4 // max customers who can use the stairs simultaneously
 
 
 /*  **STRUCTS **
@@ -280,11 +280,25 @@ void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *
 // Function to print the turnaround time and response time for each thread.
 void print_clock_array(void)
 {
-    printf("************Process Stats**********\n");
+    double avg_turnaround_time = 0;
+    double avg_response_time = 0;
+    double response_time = 0;
+    double turnaround_time = 0;
+    
+    printf("\n************Process Stats**********\n");
     for (int i = 0; i < MAX_STORE_CUSTOMERS; i++)
     {
-        printf("Process %d: create: %ld |start: %ld |complete %ld\n", i, thread_create_time[i], thread_start_time[i], thread_complete_time[i]);
-        printf("Turnaround Time: %ld", thread_complete_time[i]-thread_create_time[i]);
-        printf(" | Response Time: %ld\n\n", thread_start_time[i]-thread_create_time[i]);
+        printf("Process %d: create: %ld |start: %ld |",i, thread_create_time[i], thread_start_time[i]);
+        printf(" complete %ld\n", thread_complete_time[i]);
+        turnaround_time = (double)(thread_complete_time[i] - thread_create_time[i]);
+        response_time = (double)(thread_start_time[i] - thread_create_time[i]);
+        printf("Turnaround Time: %ld", (long)turnaround_time);
+        printf(" | Response Time: %ld\n\n", (long)response_time);
+        avg_turnaround_time += turnaround_time;
+        avg_response_time += response_time;
     }
+    avg_turnaround_time = avg_turnaround_time / (double)MAX_STORE_CUSTOMERS;
+    avg_response_time = avg_response_time / (double)MAX_STORE_CUSTOMERS;
+    printf("\nAVG TURNAROUND TIME: %f Clocks/Second\n", avg_turnaround_time);
+    printf("AVG RESPONSE TIME: %f Clocks/Second\n", avg_response_time);
 }
