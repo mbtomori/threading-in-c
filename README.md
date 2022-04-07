@@ -108,9 +108,11 @@ If our code did not have an element of randomness, it would be easier to calcula
 
 ## Compile and Run Instructions
 
-Compile and run with `make stairs`. The output will print directly to the terminal.
+Compile and run with `make stairs`. The output will print directly to the terminal. 
 
 run `make clean` before re-running.
+
+The code can be tested by reviewing the print statements that are outputted to the terminal.
 
 ## Group contributions
 Yvette and Maria met twice on our own as well as once with Professor Hamandi to discuss the project. We each wrote down our ideas and implemented drafts using GitHub to collaborate.
