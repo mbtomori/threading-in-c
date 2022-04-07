@@ -28,28 +28,25 @@ and descending customers. These functions handle the locking and blocking of
 the opposing direction's semaphores.
 
 `void *ascend_stairs(void *customer_thread);`
-This function handles a customer "ascending" the staircase.
+- This function handles a customer "ascending" the staircase.
 
 `void *descend_stairs(void *customer_thread);`
-This function handles a customer "descending" the staircase. 
+
+- This function handles a customer "descending" the staircase. 
 
 #### Light Switch Functions
 The `switch` functions listed below handle determining whether a staircase is empty or whether there are others on it.
 
 `void switch_lock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);`
-
-If the thread is the first to the staircase, it can set the direction of the staircase.
+- If the thread is the first to the staircase, it can set the direction of the staircase.
 
 `void switch_unlock(lightswitch_t *direction, sem_t *direction_semaphore, sem_t *locking_semaphore);`
-
-If the thread is the last to exit the staircase, it can reset the direction of the staircase.
+- If the thread is the last to exit the staircase, it can reset the direction of the staircase.
 
 #### Turnaround Time and Response Time Print Function
 `void print_clock_array(void);`
-
-This function simply performs printing of data from `clock_t` arrays as well as the calculations to determine the turnaround time and response time. 
-
-We implemented this function because the process times change each time the code
+- This function simply performs printing of data from `clock_t` arrays as well as the calculations to determine the turnaround time and response time. 
+- We implemented this function because the process times change each time the code
 is run and we figured this was the most accurate way to calculate these metrics.
 
 #### Semaphore Functions
